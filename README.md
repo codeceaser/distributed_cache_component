@@ -1,1 +1,1 @@
-# ignite-ehcache-poc
+# ehcache+kafka, ignite, elasticsearch+ignite poc
