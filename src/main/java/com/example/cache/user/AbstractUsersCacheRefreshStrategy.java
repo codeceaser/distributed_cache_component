@@ -5,7 +5,7 @@ import com.example.dto.UserDTO;
 import com.example.repositories.UserElasticWrapperRepository;
 import com.example.repositories.UserIgniteWrapperRepository;
 import com.example.repositories.UserJpaRepository;
-import com.example.repositories.api.IndicesBasedWrapperRepository;
+import com.example.components.IndicesBasedWrapperRepository;
 import com.example.services.IUserService;
 import com.example.services.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;

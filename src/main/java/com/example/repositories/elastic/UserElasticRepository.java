@@ -2,7 +2,7 @@ package com.example.repositories.elastic;
 
 import com.example.dto.UserDTO;
 import com.example.repositories.UserRepository;
-import com.example.repositories.api.InvertedIndicesRepository;
+import com.example.components.InvertedIndicesRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Repository;

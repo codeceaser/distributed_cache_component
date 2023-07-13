@@ -1,6 +1,5 @@
-package com.example.repositories.api;
+package com.example.components;
 
-import com.example.components.Cacheable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

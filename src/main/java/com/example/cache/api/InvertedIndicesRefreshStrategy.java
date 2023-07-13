@@ -1,7 +1,7 @@
 package com.example.cache.api;
 
 import com.example.components.Cacheable;
-import com.example.repositories.api.IndicesBasedWrapperRepository;
+import com.example.components.IndicesBasedWrapperRepository;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

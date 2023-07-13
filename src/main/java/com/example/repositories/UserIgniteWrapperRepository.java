@@ -2,8 +2,8 @@ package com.example.repositories;
 
 import com.example.dto.UserDTO;
 import com.example.entities.User;
-import com.example.repositories.api.IndicesBasedWrapperRepository;
-import com.example.repositories.api.InvertedIndicesRepository;
+import com.example.components.IndicesBasedWrapperRepository;
+import com.example.components.InvertedIndicesRepository;
 import com.example.repositories.ignite.impl.UserIgniteRepositoryImpl;
 import com.example.services.IUserService;
 import com.fasterxml.jackson.core.type.TypeReference;

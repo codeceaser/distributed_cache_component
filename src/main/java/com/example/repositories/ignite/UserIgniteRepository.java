@@ -1,7 +1,7 @@
 package com.example.repositories.ignite;
 
 import com.example.repositories.UserRepository;
-import com.example.repositories.api.InvertedIndicesRepository;
+import com.example.components.InvertedIndicesRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 

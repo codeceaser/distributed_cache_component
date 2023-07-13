@@ -1,4 +1,4 @@
-package com.example.repositories.api;
+package com.example.components;
 
 public interface InvertedIndicesRepository {
 }
