@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: distributed-cache-cluster
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ignite
+      service: distributed-cache
+  template:
+    metadata:
+      labels:
+        app: ignite
+        service: distributed-cache
+    spec:
+      containers:
+      - name: distributed-cache-component
+        image: priyangd/distributed-cache-component:latest
+        ports:
+          - containerPort:
+              8080
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /distributed_cache_component/
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /distributed_cache_component/
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        volumeMounts:
+          - mountPath: /etc/truststore/distributed_cache_truststore.jks
+            name: distributed-cache-trust-store-vol
+            subPath: truststore.jks
+          - mountPath: /etc/keystore/distributed_cache_keystore.jks
+            name: distributed-cache-key-store-vol
+            subPath: keystore.jks
+
+
+      volumes:
+        - name: distributed-cache-trust-store-vol
+          secret:
+            secretName: distributed-cache-trust-store-secret
+        - name: distributed-cache-key-store-vol
+          secret:
+            secretName: distributed-cache-key-store-secret

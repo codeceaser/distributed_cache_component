@@ -1,0 +1,24 @@
+2023-03-25 14:20:44 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER" not found; SQL statement:
+select user0_.id as id1_0_, user0_.email as email2_0_, user0_.name as name3_0_ from user user0_ [42102-200]
+2023-03-25 14:28:35 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USERS" not found; SQL statement:
+SELECT * FROM USERS [42102-200]
+2023-03-25 14:28:56 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM INFORMATION_SCHEMA.USERS INFORMATION_SCHEMA.[*]USERS"; SQL statement:
+SELECT * FROM INFORMATION_SCHEMA.USERS INFORMATION_SCHEMA.USERS [42000-200]
+2023-03-25 14:30:02 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "DELETE TABLE[*] USERS"; expected "identifier"; SQL statement:
+DELETE TABLE USERS [42001-200]
+2023-03-25 14:30:39 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "DROP USERS[*]"; expected "TABLE, INDEX, USER, SEQUENCE, CONSTANT, TRIGGER, VIEW, ROLE, ALIAS, SCHEMA, ALL, DOMAIN, TYPE, DATATYPE, AGGREGATE, SYNONYM"; SQL statement:
+DROP USERS [42001-200]
+2023-03-25 14:35:17 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USER" already exists; SQL statement:
+CREATE TABLE USER( 
+   id INT NOT NULL, 
+   name VARCHAR(50) NOT NULL, 
+   email VARCHAR(100) NOT NULL,
+ PRIMARY KEY (ID)
+   
+) [42101-200]

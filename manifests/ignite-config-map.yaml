@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ignite-config-map1
+data:
+  node-configuration: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+      <bean class="org.apache.ignite.configuration.IgniteConfiguration">
+      <property name="consistentId" value="#{ T(java.lang.System).getenv('MY_POD_NAME') + T(java.lang.System).currentTimeMillis() }"/>
+      <property name="discoverySpi">
+      <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+      <property name="ipFinder">
+      <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.kubernetes.TcpDiscoveryKubernetesIpFinder">
+      <constructor-arg>
+      <bean class="org.apache.ignite.kubernetes.configuration.KubernetesConnectionConfiguration">
+      <property name="namespace" value="default" />
+      <property name="serviceName" value="ignite-service" />
+      </bean>
+      </constructor-arg>
+      <property name="masterUrl" value="https://kubernetes.default.svc.cluster.local"/>
+      </bean>
+      </property>
+      </bean>
+      </property>
+      <property name="connectorConfiguration">
+      <bean class="org.apache.ignite.configuration.ConnectorConfiguration"/>
+      </property>
+      </bean>
+    </beans>
+
