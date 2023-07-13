@@ -47,7 +47,7 @@ Every time I rebuild the distributed-cache image, I need to delete the old pod a
 Also I have to restart the ignite cluster to make it work!
 
 
------------
+------ commands to start docker container for kafka
 # Add the Bitnami chart repository to Helm
 helm repo add bitnami https://charts.bitnami.com/bitnami
 
@@ -57,6 +57,7 @@ helm repo update
 # Install Kafka using the Bitnami Kafka Helm chart
 helm install kafka bitnami/kafka
 
+----- commands to start docker container for elasticsearch
 helm repo add elastic https://helm.elastic.co
 helm repo update
 helm install --name elasticsearch elastic/elasticsearch --set imageTag=7.9.3
