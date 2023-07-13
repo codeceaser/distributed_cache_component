@@ -5,7 +5,7 @@ import com.example.annotations.RefreshCache;
 import com.example.cache.api.AbstractCacheRefreshStrategy;
 import com.example.dto.UserDTO;
 import com.example.entities.User;
-import com.example.repositories.UserRepository;
+import com.example.repositories.UserJpaRepository;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.ignite.Ignite;
@@ -31,7 +31,7 @@ public class UserService implements IUserService{
 
     public static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     @Autowired
-    private UserRepository userRepository;
+    private UserJpaRepository userJpaRepository;
     @Value("${indicator}")
     private String indicator;
     public static String prop1;
@@ -60,7 +60,7 @@ public class UserService implements IUserService{
 
     public Collection<UserDTO> findAll() {
         LOGGER.info("Indicator Value is : {} and prop1 is: {}", this.indicator, prop1);
-        return (Collection)this.userRepository.findAll().stream().map(UserDTO::new).collect(Collectors.toList());
+        return (Collection)this.userJpaRepository.findAll().stream().map(UserDTO::new).collect(Collectors.toList());
     }
 
     @FetchAndRefreshCache(
@@ -135,7 +135,7 @@ public class UserService implements IUserService{
     }
 
     public UserDTO findById(Long id) {
-        return (UserDTO)this.userRepository.findById(id).map(UserDTO::new).orElseGet(() -> {
+        return (UserDTO)this.userJpaRepository.findById(id).map(UserDTO::new).orElseGet(() -> {
             return null;
         });
     }
@@ -144,7 +144,7 @@ public class UserService implements IUserService{
             cacheNames = {"usersByLocation", "usersByDepartment", "usersByLocationAndDepartment"}
     )
     public UserDTO save(User user) {
-        UserDTO saved = new UserDTO((User)this.userRepository.save(user));
+        UserDTO saved = new UserDTO((User)this.userJpaRepository.save(user));
         return saved;
     }
 
@@ -152,7 +152,7 @@ public class UserService implements IUserService{
             cacheNames = {"usersByLocation", "usersByDepartment", "usersByLocationAndDepartment"}
     )
     public UserDTO create(User user) {
-        UserDTO saved = new UserDTO((User)this.userRepository.save(user));
+        UserDTO saved = new UserDTO((User)this.userJpaRepository.save(user));
         return saved;
     }
 
@@ -161,6 +161,6 @@ public class UserService implements IUserService{
             isDelete = "Y"
     )
     public void deleteById(Long id) {
-        this.userRepository.deleteById(id);
+        this.userJpaRepository.deleteById(id);
     }
 }

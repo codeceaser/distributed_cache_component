@@ -1,10 +1,8 @@
 package com.example.repositories.api;
 
 import com.example.components.Cacheable;
-import com.google.common.collect.Lists;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -17,42 +15,29 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.CollectionUtils;
 
 import javax.cache.expiry.Duration;
 import java.io.IOException;
-import java.util.*;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import static com.example.cache.api.AbstractCacheRefreshStrategy.CREATE_IGNITE_CACHE;
-import static com.example.utils.CommonUtil.retrieve;
+import static com.example.cache.api.AbstractCacheRefreshStrategy.createIndexCacheForIgnite;
 
-public interface ElasticWrapperRepository<I, C extends Cacheable, O> {
+public interface ElasticWrapperRepository<I, C extends Cacheable, O> extends IndicesBasedWrapperRepository<I, C, O> {
 
     Logger LOGGER = LoggerFactory.getLogger(ElasticWrapperRepository.class);
 
     RestHighLevelClient client();
-    ElasticsearchRepository elasticRepository();
-    
-    JpaRepository jpaRepository();
-
     Ignite ignite();
-
-    I getMaxValueForIdentifier();
-
-    String cacheName();
-
-    Map<I,C> convertCollectionToMap(Collection elements);
 
     C convertInvertedIndicesMapToObject(Map<String, Object> map);
 
     Map<String, Object> convertObjectToInvertedIndicesMap(C object);
-
-    C getExistingObjectByIdentifier(Object id);
 
     default void createInvertedIndicesAndCacheEntries(Collection<C> newerObjects) {
         if(CollectionUtils.isEmpty(newerObjects)) {
@@ -94,7 +79,9 @@ public interface ElasticWrapperRepository<I, C extends Cacheable, O> {
         try{
             IgniteCache<I, C> cache = ignite().cache(cacheName());
             if (Objects.isNull(cache)) {
-                cache = (IgniteCache<I, C>) CREATE_IGNITE_CACHE.apply(ignite(), cacheName(), Duration.ONE_DAY);
+                TypeReference typeReference = typeReferenceSupplier().get();
+                Type type = typeReference.getType();
+                cache = (IgniteCache<I, C>) createIndexCacheForIgnite(ignite(), cacheName(), Duration.ONE_DAY, (Class) type);
             } else{
                 Lock lock = cache.lockAll(cacheEntries.keySet());
                 lock.lock();
@@ -113,45 +100,7 @@ public interface ElasticWrapperRepository<I, C extends Cacheable, O> {
 
     default Map<I,C> findByAttributesAndRefreshInvertedIndicesAndCache(List arguments, String findMethodName){
 //        arguments.add(getMaxValueForIdentifier());
-        Collection<C> elasticSearchResults = (Collection<C>) retrieve.apply(elasticRepository(), StringUtils.replace(findMethodName, "AndIdNotIn", ""), arguments.toArray());
-        LOGGER.info("@@@ >>> From ElasticSearch, these elements {} were fetched", elasticSearchResults);
-        Map<I, C> mapFromElastic = null;
-        Map<I, C> mapFromIgnite = null;
-        if(!CollectionUtils.isEmpty(elasticSearchResults)){
-            mapFromElastic = (Map<I, C>) elasticSearchResults.stream().collect(Collectors.toMap(c -> c.getId(), Function.identity(), (existing, newer) -> newer));
-            IgniteCache<I, C> cache = ignite().cache(cacheName());
-            if(Objects.nonNull(cache)){
-                mapFromIgnite = cache.getAll(mapFromElastic.keySet());
-            }
-        }
-        boolean igniteMapEmpty = Objects.isNull(mapFromIgnite) || mapFromIgnite.isEmpty();
-        LOGGER.info("@@@ >>> From Cache {}, these elements {} were fetched", cacheName(), Optional.ofNullable(mapFromIgnite).map(String::valueOf).orElseGet(() -> "Empty"));
-        Collection<I> idsToExclude = !igniteMapEmpty ? mapFromIgnite.keySet() : Lists.newArrayList(getMaxValueForIdentifier());
-
-        LOGGER.info("@@@ >>> From Cache {}, these elements {} were fetched hence avoding them fetching again", cacheName(), idsToExclude);
-        arguments.add(idsToExclude);
-//        Collection objectsFromDB = (Collection) retrieve.apply(jpaRepository(), findMethodName, arguments.toArray());
-        Collection<O> objectsFromDB = (Collection<O>) retrieve.apply(jpaRepository(), findMethodName, arguments.toArray());//jpaRepository().findByLocationAndIdNotIn(location, idsToExclude);
-        Map<I, C> mapFromDB = Maps.newHashMap();
-        if(!CollectionUtils.isEmpty(objectsFromDB)){
-            mapFromDB = convertCollectionToMap(objectsFromDB);
-        }
-        LOGGER.info("@@@ >>> From DB, these elements {} were fetched", mapFromDB);
-        if (igniteMapEmpty) {
-            mapFromIgnite = Maps.newHashMap();
-        }
-        Set<I> dbIdToRefresh = Sets.newHashSet(mapFromDB.keySet());
-        dbIdToRefresh.removeAll(mapFromIgnite.keySet());
-        Map<I, C> mapThatNeedsToBeRefreshed = Maps.newHashMap(mapFromDB);
-        mapThatNeedsToBeRefreshed.keySet().retainAll(dbIdToRefresh);
-        LOGGER.info("@@@ >>> From DB, these elements {} are to be refreshed", mapThatNeedsToBeRefreshed);
-        Map<I, C> finalMap = Maps.newConcurrentMap();
-        finalMap.putAll(mapFromIgnite);
-        finalMap.putAll(mapThatNeedsToBeRefreshed);
-
-        createInvertedIndicesAndCacheEntries(mapThatNeedsToBeRefreshed.values());
-        LOGGER.info("@@@ >>> From Cache {}, these elements {} were refreshed", cacheName(), finalMap);
-        return finalMap;
+        return IndicesBasedWrapperRepository.super.findByAttributesAndRefreshInvertedIndicesAndCache(arguments, findMethodName);
     }
 
     default void removeInvertedIndicesAndCacheEntries(I keyOfObjectToBeRemoved) {

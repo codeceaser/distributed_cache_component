@@ -3,20 +3,24 @@ package com.example.repositories;
 import com.example.dto.UserDTO;
 import com.example.entities.User;
 import com.example.repositories.api.ElasticWrapperRepository;
+import com.example.repositories.api.InvertedIndicesRepository;
 import com.example.repositories.elastic.UserElasticRepository;
 import com.example.services.IUserService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Maps;
 import org.apache.ignite.Ignite;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
+import javax.cache.Cache;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import static com.example.cache.user.AbstractUsersCacheRefreshStrategy.USER_DTO_TYPE_REFERENCE;
 import static com.example.services.UserService.CACHE_MAP_CONVERTER;
 
 @Service
@@ -30,7 +34,7 @@ public class UserElasticWrapperRepository implements ElasticWrapperRepository<Lo
     private RestHighLevelClient client;
 
     @Autowired
-    private UserRepository userJpaRepository;
+    private UserJpaRepository userJpaRepository;
 
     @Autowired
     IUserService userService;
@@ -41,11 +45,6 @@ public class UserElasticWrapperRepository implements ElasticWrapperRepository<Lo
     @Override
     public RestHighLevelClient client() {
         return client;
-    }
-
-    @Override
-    public ElasticsearchRepository elasticRepository() {
-        return userElasticRepository;
     }
 
     @Override
@@ -65,7 +64,7 @@ public class UserElasticWrapperRepository implements ElasticWrapperRepository<Lo
 
     @Override
     public String cacheName() {
-        return "elastic-user";
+        return "indexed-user";
     }
 
     @Override
@@ -98,5 +97,22 @@ public class UserElasticWrapperRepository implements ElasticWrapperRepository<Lo
     @Override
     public UserDTO getExistingObjectByIdentifier(Object id) {
         return userService.findById((Long) id);
+    }
+
+    @Override
+    public Cache<Long, UserDTO> retrieveCache() {
+        return ignite.cache("indexed-user");
+    }
+
+    @Override
+    public InvertedIndicesRepository invertedIndicesRepository() {
+        return userElasticRepository;
+    }
+
+    @Override
+    public Supplier<TypeReference> typeReferenceSupplier() {
+        return () -> {
+            return USER_DTO_TYPE_REFERENCE;
+        };
     }
 }

@@ -2,6 +2,7 @@ package com.example.conf;
 
 
 import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteIllegalStateException;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
@@ -24,6 +25,16 @@ import org.springframework.context.annotation.Primary;
 public class ApplicationConfiguration {
 
 
+    private static String cachingSolution;
+
+    @Value("${caching.solution}")
+    public void setCachingSolution(String cachingSolutionVal) {
+        cachingSolution = cachingSolutionVal;
+    }
+
+    public static String cachingSolution() {
+        return cachingSolution;
+    }
 
     @Bean
     @Primary
@@ -40,22 +51,27 @@ public class ApplicationConfiguration {
         return dataSource;
     }
 
-    /*@Bean
-    public DataSourceInitializer dataSourceInitializer(final DataSource dataSource) {
-        DataSourceInitializer initializer = new DataSourceInitializer();
-        initializer.setDataSource(dataSource);
-        initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("manifests/data.sql")));
-        return initializer;
-    }*/
+    private static String igniteServiceName;
 
     @Value("${ignite.kubernetes.service.name}")
-    private String igniteServiceName;
+    public void setIgniteServiceName(String igniteServiceNameVal) {
+        igniteServiceName = igniteServiceNameVal;
+    }
 
-    @Value("${ignite.cache.name}")
-    private String cacheName;
     @Bean
-    @ConditionalOnExpression("'${caching.solution}'=='ignite' || '${caching.solution}'=='elastic'")
+    @ConditionalOnExpression("'${caching.solution}'=='ignite' || '${caching.solution}'=='elastic' || '${caching.solution}'=='indexed-ignite'")
     public Ignite igniteInstance() {
+        Ignite ignite;
+        try {
+            ignite = Ignition.ignite();
+        } catch (IgniteIllegalStateException e) {
+            IgniteConfiguration cfg = getIgniteConfiguration();
+            ignite = Ignition.start(cfg);
+        }
+        return ignite;
+    }
+
+    private static IgniteConfiguration getIgniteConfiguration() {
         IgniteConfiguration cfg = new IgniteConfiguration();
 
         // Enable peer-class loading feature.
@@ -83,12 +99,17 @@ public class ApplicationConfiguration {
         sslContextFactory.setKeyStorePassword("changeit".toCharArray());
 //        cfg.setSslContextFactory(sslContextFactory);
         cfg.setClientMode(true);
-
-        // Start Ignite with these configurations
-        Ignite ignite = Ignition.start(cfg);
-
-        return ignite;
+        return cfg;
     }
+
+    /*@Bean
+    public DataSourceInitializer dataSourceInitializer(final DataSource dataSource) {
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("manifests/data.sql")));
+        return initializer;
+    }*/
+
 
     /*@Autowired
     private Ignite ignite;

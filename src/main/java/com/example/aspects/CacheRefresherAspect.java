@@ -20,7 +20,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -29,18 +28,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.example.conf.ApplicationConfiguration.cachingSolution;
+
 @Aspect
 public class CacheRefresherAspect {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(CacheRefresherAspect.class);
-
-
-    private static String cachingSolution;
-
-    @Value("${caching.solution}")
-    public void setCachingSolution(String cachingSolutionVal) {
-        cachingSolution = cachingSolutionVal;
-    }
 
     @Autowired(required = false)
     KafkaCacheRefreshProducer kafkaCacheRefreshProducer;
@@ -121,7 +114,7 @@ public class CacheRefresherAspect {
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
-        if(StringUtils.equalsIgnoreCase("ehcache", cachingSolution)){
+        if(StringUtils.equalsIgnoreCase("ehcache", cachingSolution())){
             LOGGER.info("**** Going to send the Event to Kafka for Cache Refresh ****");
             CacheRefreshDTO cacheRefreshDTO = new CacheRefreshDTO(existingObject, savedObject, new RefreshCacheDTO(refreshCache));
             kafkaCacheRefreshProducer.send("cache-refresh", cacheRefreshDTO);
@@ -154,7 +147,7 @@ public class CacheRefresherAspect {
                 LOGGER.info("Refreshing the Cache : {}", cacheName);
                 RefreshStrategy cacheRefreshStrategy = (RefreshStrategy) ApplicationContextProvider.getBeanUsingQualifier(RefreshStrategy.class, cacheName);
                 Type type = null;
-                if(StringUtils.equalsIgnoreCase("ehcache", cachingSolution) && typeConversionRequired){
+                if(StringUtils.equalsIgnoreCase("ehcache", cachingSolution()) && typeConversionRequired){
                     CacheRefreshStrategy ehCacheRefreshStrategy = (CacheRefreshStrategy) cacheRefreshStrategy;
                     if (Objects.nonNull(existingObject)) {
                         existingObject = ehCacheRefreshStrategy.deSerializer().apply(ehCacheRefreshStrategy.serializer().apply(existingObject));
@@ -170,7 +163,7 @@ public class CacheRefresherAspect {
 
                 Object replacedObject = cacheRefreshStrategy.refreshCache((Cacheable) existingObject, (Cacheable) savedObject, refreshCache.isDelete());
                 LOGGER.info("Object {} replaced {} in Cache {}", savedObject, existingObject, cacheName);
-                if(StringUtils.equalsIgnoreCase("elastic", cachingSolution)){
+                if(StringUtils.equalsIgnoreCase("elastic", cachingSolution()) || StringUtils.equalsIgnoreCase("indexed-ignite", cachingSolution())){
                     break;
                 }
             }

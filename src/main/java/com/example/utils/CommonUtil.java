@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.TriFunction;
+import org.apache.ignite.cache.query.annotations.QuerySqlField;
 import org.springframework.util.CollectionUtils;
 
 import java.beans.Expression;
@@ -17,10 +19,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -44,6 +43,17 @@ public class CommonUtil {
                 throw new RuntimeException(var2);
             }
         }
+    };
+
+    public static final Function<Class, Set<Field>> INDEXED_FIELDS_EXTRACTOR = (clazz) -> {
+        Set<Field> indiceFields = Sets.newHashSet();
+        Arrays.stream(clazz.getDeclaredFields()).filter(field ->
+            Objects.nonNull(field) && Objects.nonNull(field.getAnnotation(QuerySqlField.class))
+        ).forEach((field) -> {
+            field.setAccessible(true);
+            indiceFields.add(field);
+        });
+        return indiceFields;
     };
     public static final Map<Class, Map<String, Field>> CLASS_FIELD_MAP = Maps.newHashMap();
     public static final BiFunction<Class, String, Field> extractField = (clazz, fieldName) -> {

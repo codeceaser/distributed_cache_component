@@ -19,6 +19,9 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<elasticsearch.version>7.9.3</elasticsearch.version>
 		<ignite.version>2.13.0</ignite.version>
+		<ignite-spring-data-ext.version>1.0.0</ignite-spring-data-ext.version>
+		<ignite-autoconfigure.version>1.0.0</ignite-autoconfigure.version>
+		<ignite-spring-data.version>2.0.0</ignite-spring-data.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -192,6 +195,40 @@
 			<version>7.9.3</version>
 		</dependency>
 
+		<!--<dependency>
+			<groupId>org.apache.ignite</groupId>
+			<artifactId>ignite-spring-data_2.2</artifactId>
+			<version>2.8.1</version>
+		</dependency>-->
+
+		<dependency>
+			<groupId>org.apache.ignite</groupId>
+			<artifactId>ignite-spring-data</artifactId>
+			<version>${ignite-spring-data.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.ignite</groupId>
+			<artifactId>ignite-spring-data-ext</artifactId>
+			<version>${ignite-spring-data.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.ignite</groupId>
+			<artifactId>ignite-indexing</artifactId>
+			<version>${ignite.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.ignite</groupId>
+			<artifactId>ignite-spring-boot-autoconfigure-ext</artifactId>
+			<version>${ignite-autoconfigure.version}</version>
+		</dependency>
 
 	</dependencies>
 
