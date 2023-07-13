@@ -66,6 +66,9 @@ kubectl get service
 helm uninstall elasticsearch
 docker run --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "network.host=0.0.0.0" docker.elastic.co/elasticsearch/elasticsearch:7.9.3
 
+----- commands to start build and push docker image
+docker build -t priyangd/distributed-cache-component:latest .
+docker push priyangd/distributed-cache-component:latest
 
 
 
